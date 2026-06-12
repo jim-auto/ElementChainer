@@ -32,9 +32,16 @@ type Statuses = Record<StatusKey, number>;
 type Enemy = {
   id: number;
   name: string;
+  art: string;
   maxHp: number;
   hp: number;
   statuses: Statuses;
+};
+
+const ENEMY_ART: Record<number, string> = {
+  1: "./images/enemy-heat.png",
+  2: "./images/enemy-shock.png",
+  3: "./images/enemy-glass.png",
 };
 
 type FxEvent = {
@@ -223,6 +230,7 @@ const createEnemies = (wave: number): Enemy[] => {
     {
       id: 1,
       name: "赤熱核",
+      art: ENEMY_ART[1],
       maxHp: 72 + lift,
       hp: 72 + lift,
       statuses: { ...emptyStatuses(), heat: 2 },
@@ -230,6 +238,7 @@ const createEnemies = (wave: number): Enemy[] => {
     {
       id: 2,
       name: "導電殻",
+      art: ENEMY_ART[2],
       maxHp: 82 + lift,
       hp: 82 + lift,
       statuses: { ...emptyStatuses(), shock: 1, resonance: 2 },
@@ -237,6 +246,7 @@ const createEnemies = (wave: number): Enemy[] => {
     {
       id: 3,
       name: "硝子兵",
+      art: ENEMY_ART[3],
       maxHp: 68 + lift,
       hp: 68 + lift,
       statuses: { ...emptyStatuses(), fragile: 1 },
@@ -286,8 +296,8 @@ function EnemyCard({
       <div className="target-mark" aria-hidden="true">
         <Crosshair size={18} />
       </div>
-      <div className="enemy-core" aria-hidden="true">
-        <span />
+      <div className={`enemy-core enemy-core-${enemy.id}`} aria-hidden="true">
+        <img className="enemy-art" src={enemy.art} alt="" />
       </div>
       <div className="enemy-info">
         <strong>{enemy.name}</strong>
