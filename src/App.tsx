@@ -1,5 +1,6 @@
 import {
   Activity,
+  CircleHelp,
   Crosshair,
   Flame,
   Hammer,
@@ -177,6 +178,80 @@ const UPGRADE_META: Record<UpgradeId, { label: string; chip: string; Icon: Lucid
   "chain-guard": { label: "Chain Guard", chip: "x2 Guard", Icon: Sparkles, kind: "overload" },
 };
 
+type ReactionGuideEntry = {
+  id: ReactionId;
+  trigger: string;
+  effect: string;
+  ready: (statuses: Statuses) => boolean;
+  hint: (statuses: Statuses) => string;
+};
+
+const REACTION_GUIDE: ReactionGuideEntry[] = [
+  {
+    id: "flash-conduct",
+    trigger: "Shock 1+ & Heat 2+",
+    effect: "放電ダメージ + Resonance",
+    ready: (s) => s.shock > 0 && s.heat >= 2,
+    hint: (s) => {
+      const needs: string[] = [];
+      if (s.shock <= 0) {
+        needs.push("Conduct");
+      }
+      if (s.heat < 2) {
+        needs.push(`Heat あと ${2 - s.heat}`);
+      }
+      return needs.join(" / ");
+    },
+  },
+  {
+    id: "overload",
+    trigger: "Heat 4+",
+    effect: "大爆発、隣へ伝播",
+    ready: (s) => s.heat >= 4,
+    hint: (s) => `Heat あと ${Math.max(0, 4 - s.heat)}`,
+  },
+  {
+    id: "wave-spread",
+    trigger: "Resonance 3+",
+    effect: "全体に波動",
+    ready: (s) => s.resonance >= 3,
+    hint: (s) => `Resonance あと ${Math.max(0, 3 - s.resonance)}`,
+  },
+  {
+    id: "shatter",
+    trigger: "Fragile 3+",
+    effect: "大ダメ、隣へひび",
+    ready: (s) => s.fragile >= 3,
+    hint: (s) => `Fragile あと ${Math.max(0, 3 - s.fragile)}`,
+  },
+  {
+    id: "core-echo",
+    trigger: "Overload & Resonance",
+    effect: "全員に貫通ダメ",
+    ready: (s) => s.overload > 0 && s.resonance > 0,
+    hint: (s) => {
+      const needs: string[] = [];
+      if (s.overload <= 0) {
+        needs.push("Overload 後");
+      }
+      if (s.resonance <= 0) {
+        needs.push("Pulse");
+      }
+      return needs.join(" / ");
+    },
+  },
+];
+
+const SKILL_PRIMED_HINT: Partial<Record<SkillId, string>> = {
+  "heat-shot": "Heat が高いほど反応しやすい",
+  conduct: "Heat があると感電が強化",
+  pulse: "Resonance を積んで Wave Spread へ",
+  break: "Fragile 済みなら追加ダメ大",
+  flashover: "Heat と Shock を同時投入",
+  "echo-pulse": "全体の Resonance を底上げ",
+  "rift-break": "Fragile を広げて Shatter へ",
+};
+
 const rewardOptions = (owned: Set<UpgradeId>, wins: number) => {
   const pool = UPGRADE_ORDER.filter((id) => !owned.has(id));
   if (pool.length <= 3) {
@@ -253,6 +328,101 @@ const createEnemies = (wave: number): Enemy[] => {
     },
   ];
 };
+
+function MatchupGuide({
+  enemy,
+  primedSkills,
+}: {
+  enemy: Enemy | undefined;
+  primedSkills: Set<SkillId>;
+}) {
+  const statuses = enemy?.statuses ?? emptyStatuses();
+  const activeStatuses = (Object.keys(statuses) as StatusKey[]).filter((key) => statuses[key] > 0);
+  const primedList = [...primedSkills].map((id) => SKILLS[id]);
+
+  return (
+    <aside className="matchup-guide" aria-label="相性ガイド">
+      <div className="guide-header">
+        <CircleHelp size={16} />
+        <strong>相性ガイド</strong>
+      </div>
+
+      <section className="guide-block">
+        <h3>いまのターゲット</h3>
+        {enemy ? (
+          <>
+            <p className="guide-target-name">{enemy.name}</p>
+            <div className="guide-status-row">
+              {activeStatuses.length > 0 ? (
+                activeStatuses.map((key) => {
+                  const meta = STATUS_META[key];
+                  const Icon = meta.Icon;
+                  return (
+                    <span className={`guide-status-pill ${key}`} key={key}>
+                      <Icon size={12} />
+                      {meta.label} {statuses[key]}
+                    </span>
+                  );
+                })
+              ) : (
+                <span className="guide-muted">状態なし — まず Heat / Shock / Pulse / Break を重ねる</span>
+              )}
+            </div>
+          </>
+        ) : (
+          <p className="guide-muted">生きている敵を選んでください</p>
+        )}
+      </section>
+
+      {primedList.length > 0 && (
+        <section className="guide-block">
+          <h3>おすすめ技</h3>
+          <ul className="guide-list">
+            {primedList.map((skill) => {
+              const Icon = skill.Icon;
+              return (
+                <li className={`guide-primed ${skill.accent}`} key={skill.id}>
+                  <Icon size={14} />
+                  <span>
+                    <b>{skill.name}</b>
+                    <small>{SKILL_PRIMED_HINT[skill.id]}</small>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="guide-note">キラキラ光るボタン = 今の相性が良い</p>
+        </section>
+      )}
+
+      <section className="guide-block">
+        <h3>リアクション早見</h3>
+        <ul className="guide-list">
+          {REACTION_GUIDE.map((entry) => {
+            const meta = REACTION_META[entry.id];
+            const Icon = meta.Icon;
+            const ready = enemy ? entry.ready(statuses) : false;
+            return (
+              <li className={`guide-reaction ${meta.kind} ${ready ? "ready" : ""}`} key={entry.id}>
+                <Icon size={14} />
+                <span>
+                  <b>{meta.label}</b>
+                  <small>{entry.trigger}</small>
+                  <small>{entry.effect}</small>
+                  {enemy && (
+                    <em className={ready ? "ready" : ""}>
+                      {ready ? "今すぐ発動可能" : entry.hint(statuses)}
+                    </em>
+                  )}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    </aside>
+  );
+}
 
 function EnemyCard({
   enemy,
@@ -346,6 +516,7 @@ export default function App() {
     { id: 1, text: "Heat / Shock / Pulse / Break", kind: "hit", chain: 0 },
   ]);
   const [flash, setFlash] = useState<SkillId | null>(null);
+  const [guideOpen, setGuideOpen] = useState(true);
   const [unlocked, setUnlocked] = useState<Set<SkillId>>(
     () => new Set([...BASE_SKILLS, ...initialSave.unlocked]),
   );
@@ -942,6 +1113,15 @@ export default function App() {
             <span>BEST</span>
           </div>
           <button
+            className={`icon-button ${guideOpen ? "active" : ""}`}
+            type="button"
+            aria-label={guideOpen ? "相性ガイドを閉じる" : "相性ガイドを開く"}
+            aria-pressed={guideOpen}
+            onClick={() => setGuideOpen((current) => !current)}
+          >
+            <CircleHelp size={19} />
+          </button>
+          <button
             className="icon-button"
             type="button"
             aria-label={muted ? "音を出す" : "ミュート"}
@@ -969,14 +1149,17 @@ export default function App() {
             />
           ))}
         </div>
-        <aside className="timeline" aria-live="polite">
-          {logs.map((log) => (
-            <div className={`timeline-entry ${log.kind}`} key={log.id}>
-              <span>{log.chain > 0 ? `x${log.chain}` : ">"}</span>
-              <b>{log.text}</b>
-            </div>
-          ))}
-        </aside>
+        <div className="arena-side">
+          {guideOpen && <MatchupGuide enemy={selectedEnemy} primedSkills={primedSkills} />}
+          <aside className="timeline" aria-live="polite">
+            {logs.map((log) => (
+              <div className={`timeline-entry ${log.kind}`} key={log.id}>
+                <span>{log.chain > 0 ? `x${log.chain}` : ">"}</span>
+                <b>{log.text}</b>
+              </div>
+            ))}
+          </aside>
+        </div>
       </section>
 
       <section className="command-dock">

@@ -266,6 +266,12 @@ button {
   border-color: rgba(255, 255, 255, 0.38);
 }
 
+.icon-button.active {
+  border-color: rgba(250, 240, 106, 0.58);
+  color: #faf06a;
+  box-shadow: inset 0 0 18px rgba(250, 240, 106, 0.12);
+}
+
 .arena {
   position: relative;
   z-index: 2;
@@ -575,6 +581,187 @@ button {
 .fx-burst.overload,
 .fx-burst.flash {
   background: #faf06a;
+}
+
+.arena-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  min-width: 0;
+}
+
+.matchup-guide {
+  overflow: auto;
+  max-height: min(52vh, 430px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(15, 17, 20, 0.78);
+  backdrop-filter: blur(18px);
+}
+
+.guide-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  color: #faf06a;
+  font-size: 0.88rem;
+}
+
+.guide-block + .guide-block {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.guide-block h3 {
+  margin: 0 0 8px;
+  color: #a8b0bb;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.guide-target-name {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.guide-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.guide-status-pill {
+  --accent: #f5f2e8;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--accent) 36%, rgba(255, 255, 255, 0.1));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, rgba(15, 17, 20, 0.72));
+  font-size: 0.68rem;
+}
+
+.guide-status-pill.heat {
+  --accent: #ff5c39;
+}
+
+.guide-status-pill.shock {
+  --accent: #50d8ff;
+}
+
+.guide-status-pill.resonance {
+  --accent: #9cff62;
+}
+
+.guide-status-pill.fragile {
+  --accent: #f5f2e8;
+}
+
+.guide-status-pill.overload {
+  --accent: #faf06a;
+}
+
+.guide-muted,
+.guide-note {
+  margin: 0;
+  color: #8f98a3;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.guide-note {
+  margin-top: 8px;
+}
+
+.guide-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guide-primed,
+.guide-reaction {
+  --accent: #f5f2e8;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.guide-primed.heat,
+.guide-reaction.heat {
+  --accent: #ff5c39;
+}
+
+.guide-primed.shock,
+.guide-reaction.shock {
+  --accent: #50d8ff;
+}
+
+.guide-primed.resonance,
+.guide-reaction.resonance {
+  --accent: #9cff62;
+}
+
+.guide-primed.fragile,
+.guide-reaction.fragile {
+  --accent: #f5f2e8;
+}
+
+.guide-primed.overload,
+.guide-reaction.overload {
+  --accent: #faf06a;
+}
+
+.guide-primed svg,
+.guide-reaction svg {
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+.guide-primed span,
+.guide-reaction span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.guide-primed b,
+.guide-reaction b {
+  font-size: 0.78rem;
+}
+
+.guide-primed small,
+.guide-reaction small,
+.guide-reaction em {
+  color: #8f98a3;
+  font-size: 0.66rem;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.guide-reaction.ready {
+  border-color: color-mix(in srgb, var(--accent) 42%, rgba(255, 255, 255, 0.1));
+  box-shadow: inset 0 0 16px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.guide-reaction em.ready {
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .timeline {
@@ -975,6 +1162,10 @@ button {
   .enemy-core {
     width: 106px;
     height: 142px;
+  }
+
+  .matchup-guide {
+    max-height: none;
   }
 
   .timeline {
